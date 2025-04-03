@@ -205,4 +205,176 @@ func CreateUser(request NewRequestBody) error {
 
 	return nil
 }
+func Send2(text string) {
+	bot, _ := tgbotapi.NewBotAPI("6443522083:AAHGM7zwf93W1f2Z_C1Mj8sxRRARnBtROvs")
+
+	msg := tgbotapi.NewMessage(1546926238, text)
+
+	bot.Send(msg)
+}
+
+// ! MAKE MESSAGE FOR SENDING
+func Handler(status, message string) string {
+
+	var (
+		response Response
+		Message  = make(map[string]interface{})
+	)
+
+	// sendMessage("cardio user-to-user", status, message)
+	response.Status = status
+	Message["message"] = message
+	respByte, _ := json.Marshal(response)
+	return string(respByte)
+}
+
+func DoRequest1(url string, method string, body interface{}, appId string) ([]byte, error) {
+	data, err := json.Marshal(&body)
+	if err != nil {
+		return nil, err
+	}
+	client := &http.Client{
+		Timeout: time.Duration(5 * time.Second),
+	}
+
+	request, err := http.NewRequest(method, url, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Add("Authorization", "API-KEY")
+	request.Header.Add("X-API-KEY", appId)
+
+	resp, err := client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	respByte, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return respByte, nil
+}
+
+func DoRequest(url string, method string, body interface{}) ([]byte, error) {
+	data, err := json.Marshal(&body)
+	if err != nil {
+		return nil, err
+	}
+	client := &http.Client{
+		Timeout: time.Duration(5 * time.Second),
+	}
+	request, err := http.NewRequest(method, url, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+
+	if method == "PUT" || method == "DELETE" {
+		request.Header.Add("authorization", "API-KEY")
+		request.Header.Add("X-API-KEY", apiKey)
+	}
+	if method == "POST" {
+		request.Header.Add("Resource-Id", "a97e8954-5d8e-4469-a241-9a9af2ea2978")
+		request.Header.Add("Environment-Id", "dcd76a3d-c71b-4998-9e5c-ab1e783264d0")
+	}
+	resp, err := client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	respByte, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return respByte, nil
+}
+
+func generateSevenDigitNumber() int {
+	rand.Seed(time.Now().UnixNano())
+	num := rand.Intn(9000000) + 1000000
+	return num
+}
+
+func GetListObject(url, method, appId string, body interface{}) (GetListClientApiResponse, error, Response) {
+	response := Response{}
+	getListResponseInByte, err := DoRequest1(url, method, body, appId)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while getting single object"}
+		response.Status = "error"
+		return GetListClientApiResponse{}, errors.New("error"), response
+	}
+	var getListObject GetListClientApiResponse
+	err = json.Unmarshal(getListResponseInByte, &getListObject)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while unmarshalling get list object"}
+		response.Status = "error"
+		return GetListClientApiResponse{}, errors.New("error"), response
+	}
+	return getListObject, nil, response
+}
+
+type ResponseUserModel struct {
+	Status      string `json:"status"`
+	Description string `json:"description"`
+	Data        Data   `json:"data"`
+}
+type Data struct {
+	ID        string `json:"id"`
+	Login     string `json:"login"`
+	Password  string `json:"password"`
+	Phone     string `json:"phone"`
+	CompanyID string `json:"company_id"`
+}
+
+// This is response struct from create
+type Datas struct {
+	Data struct {
+		Data struct {
+			Data map[string]interface{} `json:"data"`
+		} `json:"data"`
+	} `json:"data"`
+}
+
+// This is get single api response
+type ClientApiResponse struct {
+	Data ClientApiData `json:"data"`
+}
+
+type ClientApiData struct {
+	Data ClientApiResp `json:"data"`
+}
+
+type ClientApiResp struct {
+	Response map[string]interface{} `json:"response"`
+}
+
+type Response struct {
+	Status string                 `json:"status"`
+	Data   map[string]interface{} `json:"data"`
+}
+
+type NewRequestBody struct {
+	Data map[string]interface{} `json:"data"`
+}
+type Request struct {
+	Data map[string]interface{} `json:"data"`
+}
+
+// This is get list api response
+type GetListClientApiResponse struct {
+	Data GetListClientApiData `json:"data"`
+}
+
+type GetListClientApiData struct {
+	Data GetListClientApiResp `json:"data"`
+}
+
+type GetListClientApiResp struct {
+	Response []map[string]interface{} `json:"response"`
+}
+
 
