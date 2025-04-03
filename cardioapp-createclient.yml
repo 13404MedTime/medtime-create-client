@@ -1,0 +1,15 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: https://ofs.u-code.io
+functions:
+  cardioapp-createclient:
+    lang: go
+    handler: ./cardioapp-createclient
+    image: gitlab.udevs.io:5050/ucode_functions_group/cardioapp-createclient/cardioapp-createclient:latest
+    constraints:
+    - "workload=openfaas-fn"
+    limits:
+      memory: 300Mi
+    requests:
+      memory: 5Mi
